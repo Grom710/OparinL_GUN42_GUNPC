@@ -20,13 +20,13 @@ namespace HomeWork
             //    Console.Write(num + "");
             //}
 
-            string[] months = new string[]
-            { "January", "February","March","April","May","June","July","August","September","October","November","December"
-            };
-            foreach(string month in months)
-            {
-                Console.WriteLine(month);
-            }
+            //string[] months = new string[]
+            //{ "January", "February","March","April","May","June","July","August","September","October","November","December"
+            //};
+            //foreach(string month in months)
+            //{
+            //    Console.WriteLine(month);
+            //}
 
 
 
