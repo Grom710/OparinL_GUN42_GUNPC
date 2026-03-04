@@ -60,6 +60,14 @@ namespace HomeWork
             //    Console.WriteLine();
             //}
 
+            //int[] array = { 1, 2, 3, 4, 5, };
+            //int[] array2 = { 7,8, 9, 10,11, 12, 13, };
+            //Array.Copy(array, 0, array2, 0, 3);
+            //Console.WriteLine("New massiv after copy");
+            //foreach (var item in array2)
+            //{ 
+            //Console.WriteLine(item + " ");
+            //}
         }
     }
 }
