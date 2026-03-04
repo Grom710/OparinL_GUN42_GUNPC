@@ -7,19 +7,26 @@ namespace HomeWork
         static void Main(string[] args)
         {
             // Здесь массивы заданий 1-4
-            int[] Fib = new int[8];
-            Fib[0] = 0;
-            Fib[1] = 1;
-            for (int i = 2; i < 8; i++) 
-            {
-            Fib [i] = Fib[i - 1] + Fib[i - 2 ];
-            }
-            Console.WriteLine("First numbers Fib");
-            foreach (var num in Fib)
-            {
-                Console.Write(num + "");
-            }
+            //int[] Fib = new int[8];
+            //Fib[0] = 0;
+            //Fib[1] = 1;
+            //for (int i = 2; i < 8; i++) 
+            //{
+            //Fib [i] = Fib[i - 1] + Fib[i - 2 ];
+            //}
+            //Console.WriteLine("First numbers Fib");
+            //foreach (var num in Fib)
+            //{
+            //    Console.Write(num + "");
+            //}
 
+            string[] months = new string[]
+            { "January", "February","March","April","May","June","July","August","September","October","November","December"
+            };
+            foreach(string month in months)
+            {
+                Console.WriteLine(month);
+            }
 
 
 
