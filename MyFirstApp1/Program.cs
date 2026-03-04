@@ -1,4 +1,5 @@
-﻿using System.Runtime.ExceptionServices;
+﻿using System.Globalization;
+using System.Runtime.ExceptionServices;
 
 namespace HomeWork
 {
@@ -43,25 +44,44 @@ namespace HomeWork
             //    {
             //        Console.WriteLine();
             //    }
-            }
+
+
+            //double[][] jaggedArray = new double[3][];
+            //jaggedArray[0] = new double[] { 1, 2, 3, 4, 5 };
+            //jaggedArray[1] = new double[] { Math.E, Math.PI };
+            //jaggedArray[2] = new double[] { Math.Log10(1), Math.Log10(10), Math.Log10(100), Math.Log10(1000) };
+            //for (int i = 0; i < jaggedArray.Length; i++)
+            //{
+            //    Console.Write("Mas{i + 1}:");
+            //    for (int j = 0; j < jaggedArray[i].Length; j++)
+            //    {
+            //        Console.Write(jaggedArray[i][j] +"");
+            //    }
+            //    Console.WriteLine();
+            //}
+
         }
     }
+}
 
 
 
 
 
 
-        
-    
 
-        //    массивы для заданий 5 и 6.
-        //    int[] array = { 1, 2, 3, 4, 5 };
-        //    int[] array2 = { 7, 8, 9, 10, 11, 12, 13 };
-        //    var result = CopyArrays(array, array2, 2);
-        //    Выведите результат
 
-        //    string[] sample = { "", "" };
-        //    ResizeArray(ref array, /* подставьте число вторым аргументов  */ );
-        //    Что же будет выведено?
-        //}
+
+
+
+
+//    массивы для заданий 5 и 6.
+//    int[] array = { 1, 2, 3, 4, 5 };
+//    int[] array2 = { 7, 8, 9, 10, 11, 12, 13 };
+//    var result = CopyArrays(array, array2, 2);
+//    Выведите результат
+
+//    string[] sample = { "", "" };
+//    ResizeArray(ref array, /* подставьте число вторым аргументов  */ );
+//    Что же будет выведено?
+//}
