@@ -68,10 +68,21 @@ namespace HomeWork
             //{ 
             //Console.WriteLine(item + " ");
             //}
+
+            int[] array = { 1, 2, 3, 4, 5, };
+            int newSize = array.Length * 2;
+            Array.Resize(ref array, newSize);
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (i >= array.Length / 2)
+                {
+                    array[i] = 0;
+                    Console.Write(array[i] + "");
+                }
+            }
         }
     }
 }
-
 
 
 
