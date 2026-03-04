@@ -28,17 +28,33 @@ namespace HomeWork
             //    Console.WriteLine(month);
             //}
 
-
-
-
-
-
-
-
-
+            //int[,] matrix = new int[3, 3];
+            //for (int row = 0; row < 3; row++)
+            //{
+            //    for (int col = 0; col < 3; col++)
+            //    {
+            //        matrix[row, col] = (int)Math.Pow(col + 2, row + 1);
+            //    }
+            //}
+            //for (int row = 0; (row < 3); row++)
+            //{
+            //    for (int col = 0; (col < 3); col++)
+            //        Console.WriteLine(matrix[row, col]);
+            //    {
+            //        Console.WriteLine();
+            //    }
+            }
         }
     }
-}
+
+
+
+
+
+
+        
+    
+
         //    массивы для заданий 5 и 6.
         //    int[] array = { 1, 2, 3, 4, 5 };
         //    int[] array2 = { 7, 8, 9, 10, 11, 12, 13 };
