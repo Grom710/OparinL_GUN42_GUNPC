@@ -16,7 +16,6 @@
         this.name = name;
         this.health = 100f; 
         this.armor = 0.6f;  
-
         this.Damage = new Interval(minDamage, maxDamage);
     }
 

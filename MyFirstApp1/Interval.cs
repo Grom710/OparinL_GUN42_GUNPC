@@ -3,7 +3,6 @@ public struct Interval
 {
     private readonly float min;
     private readonly float max;
-
     private static readonly Random random = new Random();
 
     public float Min => min;
