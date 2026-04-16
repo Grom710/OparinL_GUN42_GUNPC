@@ -17,7 +17,7 @@ namespace HomeWork
 
                 while (true)
                 {
-                    string input = Console.ReadLine();
+                    string input = Console.ReadLine() ?? "";
 
                     if (input.ToLower() == "-exit")
                     {
@@ -28,7 +28,7 @@ namespace HomeWork
                     Console.WriteLine("Список обновлен: " + string.Join(", ", items));
 
                     Console.WriteLine("Теперь введите еще одну строку, чтобы добавить ее в середину списка.");
-                    string middleInput = Console.ReadLine();
+                    string middleInput = Console.ReadLine() ?? "";
 
                     if (middleInput.ToLower() == "-exit")
                     {
@@ -55,7 +55,7 @@ namespace HomeWork
 
                 while (true)
                 {
-                    string input = Console.ReadLine();
+                    string input = Console.ReadLine() ?? "";
 
                     if (input.ToLower() == "-exit")
                     {
@@ -82,7 +82,7 @@ namespace HomeWork
                     Console.WriteLine($"Оценка {grade} для студента {name} сохранена.");
 
                     Console.WriteLine("Введите имя студента, чтобы узнать его оценку:");
-                    string searchName = Console.ReadLine();
+                    string searchName = Console.ReadLine() ?? "";
 
                     if (searchName.ToLower() == "-exit")
                     {
@@ -104,10 +104,8 @@ namespace HomeWork
             }
         }
 
-        // --- Задание 3: Реализация двусвязного списка ---
         private class LinkedListTask
         {
-            // Узел двусвязного списка (вложенный приватный класс)
             private class Node
             {
                 public string Data { get; set; }
@@ -120,21 +118,20 @@ namespace HomeWork
                 }
             }
 
-            private Node head; // Начало списка
-            private Node tail; // Конец списка
+            private Node head; 
+            private Node tail; 
 
             public void TaskLoop()
             {
                 Console.WriteLine("Задание 3: Двусвязный список");
 
-                // Создаем список из элементов пользователя (от 3 до 6)
                 List<string> elements = new List<string>();
 
                 Console.WriteLine("Пожалуйста, введите от 3 до 6 элементов списка (по одному в строке):");
 
                 while (elements.Count < 3)
                 {
-                    string input = Console.ReadLine();
+                    string input = Console.ReadLine() ?? "";
                     if (input.ToLower() == "-exit") return;
                     elements.Add(input);
                 }
@@ -142,18 +139,16 @@ namespace HomeWork
                 Console.WriteLine("Список из 3 элементов создан. Введите еще до 3 элементов или '-exit':");
                 while (elements.Count < 6)
                 {
-                    string input = Console.ReadLine();
+                    string input = Console.ReadLine() ?? "";
                     if (input.ToLower() == "-exit") break;
                     elements.Add(input);
                 }
 
-                // Заполняем двусвязный список
                 foreach (var item in elements)
                 {
                     AddToEnd(item);
                 }
 
-                // Выводим список в прямом порядке (от головы к хвосту)
                 Console.WriteLine("\n--- Прямой порядок ---");
                 Node current = head;
                 while (current != null)
@@ -162,7 +157,6 @@ namespace HomeWork
                     current = current.Next;
                 }
 
-                // Выводим список в обратном порядке (от хвоста к голове)
                 Console.WriteLine("\n\n--- Обратный порядок ---");
                 current = tail;
                 while (current != null)
@@ -172,27 +166,26 @@ namespace HomeWork
                 }
 
                 Console.WriteLine("\n\nЗадание выполнено. Нажмите Enter для выхода или введите '-exit'.");
-                string finalInput = Console.ReadLine();
+                string finalInput = Console.ReadLine() ?? "";
                 if (finalInput.ToLower() == "-exit")
                 {
                     return;
                 }
             }
 
-            // Метод для добавления элемента в конец списка
             private void AddToEnd(string data)
             {
                 Node newNode = new Node(data);
 
-                if (head == null) // Если список пуст
+                if (head == null)
                 {
                     head = tail = newNode;
                 }
                 else
                 {
-                    newNode.Previous = tail; // Связываем новый узел с предыдущим концом
-                    tail.Next = newNode;     // Связываем старый конец с новым узлом
-                    tail = newNode;          // Обновляем указатель на конец списка
+                    newNode.Previous = tail; 
+                    tail.Next = newNode;     
+                    tail = newNode;         
                 }
             }
         }
@@ -210,7 +203,7 @@ namespace HomeWork
                 Console.WriteLine("0 - Выход из программы");
                 Console.Write("\nВаш выбор: ");
 
-                string choice = Console.ReadLine();
+                string choice = Console.ReadLine() ?? "";
 
                 switch (choice)
                 {
@@ -238,21 +231,21 @@ namespace HomeWork
         {
             var task = new ListTask();
             task.TaskLoop();
-            Console.ReadLine(); // Пауза перед возвратом в меню
+            Console.ReadLine(); 
         }
 
         private static void CheckTaskSecond()
         {
             var task = new DictionaryTask();
             task.TaskLoop();
-            Console.ReadLine(); // Пауза перед возвратом в меню
+            Console.ReadLine(); 
         }
 
         private static void CheckTaskThird()
         {
             var task = new LinkedListTask();
             task.TaskLoop();
-            Console.ReadLine(); // Пауза перед возвратом в меню
+            Console.ReadLine(); 
         }
     }
 }
