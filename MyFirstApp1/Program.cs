@@ -13,7 +13,7 @@ class Program
         Console.WriteLine($"Создан юнит: {enemy.Name}, Здоровье: {enemy.Health}, Броня: {enemy.Armor}, Урон: {enemy.Damage}");
 
        
-        int attackDamage = 20;
+        int attackDamage = 100;
         Console.WriteLine($"\n{hero.Name} наносит удар по {enemy.Name} с уроном {attackDamage}...");
 
         bool isDead = enemy.SetDamage(attackDamage);
