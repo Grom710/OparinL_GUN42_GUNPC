@@ -109,8 +109,8 @@ namespace HomeWork
             private class Node
             {
                 public string Data { get; set; }
-                public Node Next { get; set; }
-                public Node Previous { get; set; }
+                public Node? Next { get; set; }
+                public Node? Previous { get; set; }
 
                 public Node(string data)
                 {
@@ -118,8 +118,8 @@ namespace HomeWork
                 }
             }
 
-            private Node head; 
-            private Node tail; 
+            private Node? head; 
+            private Node? tail; 
 
             public void TaskLoop()
             {
@@ -150,7 +150,7 @@ namespace HomeWork
                 }
 
                 Console.WriteLine("\n--- Прямой порядок ---");
-                Node current = head;
+                Node? current = head;
                 while (current != null)
                 {
                     Console.Write(current.Data + " ");
@@ -183,9 +183,10 @@ namespace HomeWork
                 }
                 else
                 {
-                    newNode.Previous = tail; 
-                    tail.Next = newNode;     
-                    tail = newNode;         
+
+                    (tail!).Next = newNode;
+                    newNode.Previous = tail;
+                    tail = newNode;
                 }
             }
         }
