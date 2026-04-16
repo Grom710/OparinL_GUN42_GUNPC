@@ -2,73 +2,29 @@
 
 public class Weapon
 {
-    private int minDamage;
-    private int maxDamage;
-    private readonly float durability;
     private readonly string name;
+    public Interval DamageRange { get; }
 
     public string Name => name;
 
-    public int MinDamage
-    {
-        get => minDamage;
-        private set => minDamage = value;
-    }
+    public Weapon(string name) : this(name, 1, 10) { }
 
-    public int MaxDamage
-    {
-        get => maxDamage;
-        private set => maxDamage = value;
-    }
-
-    public float Durability => durability;
-
-    public Weapon(string name)
+    public Weapon(string name, int minDamage, int maxDamage)
     {
         this.name = name;
-        this.durability = 1f; 
-        this.minDamage = 1;
-        this.maxDamage = 10;
+
+        this.DamageRange = new Interval(minDamage, maxDamage);
     }
+}
 
-    public Weapon(string name, int minDamage, int maxDamage) : this(name)
+public struct Room
+{
+    public Unit Unit { get; }
+    public Weapon Weapon { get; }
+
+    public Room(Unit unit, Weapon weapon)
     {
-        SetDamageParams(minDamage, maxDamage);
-    }
-
-    public void SetDamageParams(int minDamage, int maxDamage)
-    {
-        if (minDamage > maxDamage)
-        {
-            Console.WriteLine($"[{Name}] Некорректные входные данные: MinDamage > MaxDamage. Значения поменяны местами.");
-            int temp = minDamage;
-            minDamage = maxDamage;
-            maxDamage = temp;
-        }
-
-        if (minDamage < 1)
-        {
-            Console.WriteLine($"[{Name}] Минимальный урон меньше 1. Установлено значение 1.");
-            this.minDamage = 1;
-        }
-        else
-        {
-            this.minDamage = minDamage;
-        }
-
-        if (maxDamage <= 1)
-        {
-            Console.WriteLine($"[{Name}] Максимальный урон меньше или равен 1. Установлено значение 10.");
-            this.maxDamage = 10;
-        }
-        else
-        {
-            this.maxDamage = maxDamage;
-        }
-    }
-
-    public int GetDamage()
-    {
-        return (MinDamage + MaxDamage) / 2;
+        Unit = unit;
+        Weapon = weapon;
     }
 }

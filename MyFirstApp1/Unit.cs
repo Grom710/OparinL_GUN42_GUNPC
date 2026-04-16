@@ -1,37 +1,30 @@
 ﻿public class Unit
 {
     private float health;
-    private readonly int damage;
     private readonly float armor;
     private readonly string name;
+    public Interval Damage { get; }
 
     public string Name => name;
     public float Health => health;
-    public int Damage => damage;
     public float Armor => armor;
 
-    public Unit() : this("Unknown Unit")
-    {
-    }
+    public Unit() : this("Unknown Unit", 0, 5) { }
 
-    public Unit(string name)
+    public Unit(string name, int minDamage, int maxDamage)
     {
         this.name = name;
-        health = 100f; 
-        damage = 5;
-        armor = 0.6f;
+        this.health = 100f; 
+        this.armor = 0.6f;  
+
+        this.Damage = new Interval(minDamage, maxDamage);
     }
 
-   
-    public float GetRealHealth()
+    public bool TakeWeaponHit(Weapon weapon)
     {
-        return health * (1f + armor);
-    }
-
-    
-    public bool SetDamage(int value)
-    {
-        health -= value * armor;
+        float damageTaken = weapon.DamageRange.Get() * armor;
+        health -= damageTaken;
+        Console.WriteLine($"{Name} получил {damageTaken:F2} урона от {weapon.Name}. Осталось здоровья: {health:F2}");
         return health <= 0f;
     }
 }

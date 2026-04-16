@@ -1,42 +1,51 @@
 ﻿using System;
-
-class Program
+public struct Interval
 {
-    static void Main(string[] args)
+    private readonly float min;
+    private readonly float max;
+
+    private static readonly Random random = new Random();
+
+    public float Min => min;
+    public float Max => max;
+
+    public Interval(int minValue, int maxValue)
     {
-        
-        Unit hero = new Unit("Герой");
-        Unit enemy = new Unit();
+        int tempMin = minValue;
+        int tempMax = maxValue;
 
-       
-        Console.WriteLine($"Создан юнит: {hero.Name}, Здоровье: {hero.Health}, Броня: {hero.Armor}, Урон: {hero.Damage}");
-        Console.WriteLine($"Создан юнит: {enemy.Name}, Здоровье: {enemy.Health}, Броня: {enemy.Armor}, Урон: {enemy.Damage}");
+        if (tempMin > tempMax)
+        {
+            Console.WriteLine($"[Interval] Некорректные данные: Min ({minValue}) > Max ({maxValue}). Значения поменяны местами.");
+            int swap = tempMin;
+            tempMin = tempMax;
+            tempMax = swap;
+        }
 
-       
-        int attackDamage = 100;
-        Console.WriteLine($"\n{hero.Name} наносит удар по {enemy.Name} с уроном {attackDamage}...");
+        if (tempMin == tempMax)
+        {
+            Console.WriteLine($"[Interval] Некорректные данные: Min и Max равны ({tempMin}). Max увеличен на 10.");
+            tempMax += 10;
+        }
 
-        bool isDead = enemy.SetDamage(attackDamage);
+        if (tempMin < 0)
+        {
+            Console.WriteLine($"[Interval] Некорректные данные: Min ({tempMin}) < 0. Установлено значение 0.");
+            tempMin = 0;
+        }
+        if (tempMax < 0)
+        {
+            Console.WriteLine($"[Interval] Некорректные данные: Max ({tempMax}) < 0. Установлено значение 0.");
+            tempMax = 0;
+        }
 
-        
-        Console.WriteLine($"У {enemy.Name} осталось {enemy.Health:F2} здоровья.");
-        Console.WriteLine($"Фактическое здоровье (с учётом брони): {enemy.GetRealHealth():F2}");
+        this.min = tempMin;
+        this.max = tempMax;
+    }
 
-        if (isDead)
-            Console.WriteLine($"{enemy.Name} погиб!");
-        else
-            Console.WriteLine($"{enemy.Name} выжил.");
-
-      
-        Console.WriteLine($"\n{hero.Name} наносит ещё один удар по {enemy.Name} с уроном {attackDamage}...");
-        isDead = enemy.SetDamage(attackDamage);
-
-        Console.WriteLine($"У {enemy.Name} осталось {enemy.Health:F2} здоровья.");
-
-        if (isDead)
-            Console.WriteLine($"{enemy.Name} погиб!");
-        else
-            Console.WriteLine($"{enemy.Name} выжил.");
+    public float Get()
+    {
+        return (float)(random.NextDouble() * (max - min) + min);
     }
 }
 
