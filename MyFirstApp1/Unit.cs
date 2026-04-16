@@ -1,45 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyFirstApp1
+﻿public class Unit
 {
-    public class Unit
+    // Приватные поля
+    private float health;
+    private readonly int damage;
+    private readonly float armor;
+    private readonly string name;
+
+    // Свойства только для чтения
+    public string Name => name;
+    public float Health => health;
+    public int Damage => damage;
+    public float Armor => armor;
+
+    // Конструктор без аргументов, вызывает конструктор с аргументом
+    public Unit() : this("Unknown Unit")
     {
-        private float _health;
-        private float _armor;
-       
+    }
 
-        public float Health => _health;
+    // Конструктор с аргументом для имени
+    public Unit(string name)
+    {
+        this.name = name;
+        health = 100f; // Примерное начальное здоровье, можно изменить по задаче
+        damage = 5;
+        armor = 0.6f;
+    }
 
-        public string Name { get; }
+    // Метод для получения фактического здоровья
+    public float GetRealHealth()
+    {
+        return health * (1f + armor);
+    }
 
-
-        public Unit() : this(name: " Unknown Unit ")
-        {
-        }
-        public Unit(string name)
-        {
-            Name = name;
-        }
-
-        public float RealHealth()
-        {
-            return Health * (1 + Armour);
-        }
-
-        public float Armour
-
-        {
-            get { return (float)Math.Round(_armor, 2);}
-            set
-            {
-
-            }
-        }
-
-       
+    // Метод для получения урона
+    public bool SetDamage(int value)
+    {
+        health -= value * armor;
+        return health <= 0f;
     }
 }
