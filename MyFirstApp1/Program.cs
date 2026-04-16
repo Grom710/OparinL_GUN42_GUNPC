@@ -72,7 +72,7 @@ namespace HomeWork
 
                     string name = parts[0];
 
-                    if (!int.TryParse(parts[1], out int grade) || grade < 2 || grade > 5 || grade > 3 || grade > 4)
+                    if (!int.TryParse(parts[1], out int grade) || grade < 2 || grade > 5)
                     {
                         Console.WriteLine("Ошибка: Оценка должна быть целым числом от 2 до 5.");
                         continue;
