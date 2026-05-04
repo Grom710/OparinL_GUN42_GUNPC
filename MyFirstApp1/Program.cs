@@ -11,73 +11,127 @@ namespace CasinoApp
     {
         static void Main(string[] args)
         {
-            // Создаем экземпляры наших сервисов.
-            // Профиль игрока сохраняется в папке "data/profiles"
+            // Создаем сервисы. Они создадут нужные папки при запуске.
             ISaveLoadService<PlayerProfile> profileService = new PlayerProfileService();
-
-            // Универсальный сервис для работы с текстовыми файлами в папке "data/files"
             ISaveLoadService<string> fileSystemService = new FileSystemSaveLoadService("data/files");
 
-            // --- БЛОК ВХОДА В ИГРУ ---
-            Console.WriteLine("Добро пожаловать в Казино!");
-            string username = InputService.ReadString("Введите ваше имя для входа или регистрации: ");
+            // Переменная для хранения текущего игрока
+            PlayerProfile player = null;
 
-            if (string.IsNullOrWhiteSpace(username))
+            // Флаг, чтобы управлять главным циклом программы
+            bool isRunning = true;
+
+            // ГЛАВНЫЙ ЦИКЛ ПРОГРАММЫ
+            while (isRunning)
             {
-                Console.WriteLine("Имя пользователя не может быть пустым. Выход из программы.");
-                return;
+                Console.WriteLine("\n--- Главное меню Казино ---");
+                Console.WriteLine("1. Играть (Профиль игрока)");
+                Console.WriteLine("2. Тест сервиса файлов (Сохранить/Загрузить текст)");
+                Console.WriteLine("3. Выход");
+
+                int mainChoice = InputService.ReadInt("Ваш выбор: ", 1, 3);
+
+                switch (mainChoice)
+                {
+                    case 1: // --- БЛОК ИГРЫ ---
+                        // Если игрок еще не вошел, просим его имя и загружаем профиль
+                        if (player == null)
+                        {
+                            Console.Write("Введите ваше имя для входа или регистрации: ");
+                            string username = Console.ReadLine().Trim();
+
+                            if (string.IsNullOrWhiteSpace(username))
+                            {
+                                Console.WriteLine("Имя не может быть пустым.");
+                                break; // Возвращаемся в главное меню
+                            }
+
+                            player = profileService.LoadData(username);
+
+                            if (player == null)
+                            {
+                                Console.WriteLine($"Привет, {username}! Создаем новый профиль.");
+                                player = new PlayerProfile(username);
+                                profileService.SaveData(player, username);
+                                Console.WriteLine("Профиль создан.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"С возвращением, {player.Username}!");
+                            }
+                        }
+                        // Запускаем игровое меню, передавая профиль и сервис
+                        ShowGameMenu(player, profileService);
+                        break;
+
+                    case 2: // --- БЛОК ТЕСТА ФАЙЛОВОГО СЕРВИСА ---
+                        Console.WriteLine("\n--- Работа с текстовыми файлами ---");
+                        Console.WriteLine("1. Сохранить текст");
+                        Console.WriteLine("2. Загрузить текст");
+                        int fileChoice = InputService.ReadInt("Выберите действие: ", 1, 2);
+
+                        if (fileChoice == 1)
+                        {
+                            string textToSave = InputService.ReadString("Введите текст для сохранения: ");
+                            string fileId = InputService.ReadString("Введите имя файла (без расширения): ");
+                            fileSystemService.SaveData(textToSave, fileId);
+                            Console.WriteLine("Текст успешно сохранен в файл data/files/" + fileId + ".txt");
+                        }
+                        else if (fileChoice == 2)
+                        {
+                            string fileId = InputService.ReadString("Введите имя файла для загрузки: ");
+                            string loadedText = fileSystemService.LoadData(fileId);
+
+                            if (loadedText != null)
+                            {
+                                Console.WriteLine("\n--- Содержимое файла ---");
+                                Console.WriteLine(loadedText);
+                                Console.WriteLine("----------------------");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Файл не найден или пуст.");
+                            }
+                        }
+                        break;
+
+                    case 3: // --- ВЫХОД ---
+                        isRunning = false;
+                        Console.WriteLine("До свидания!");
+                        break;
+                }
             }
-
-            // Пробуем загрузить существующий профиль по имени (ID)
-            PlayerProfile player = profileService.LoadData(username);
-
-            // Если профиля нет (player == null), создаем новый
-            if (player == null)
-            {
-                Console.WriteLine($"Профиль для '{username}' не найден. Создаем новый.");
-                player = new PlayerProfile(username);
-                // Сразу сохраняем новый пустой профиль, чтобы файл создался
-                profileService.SaveData(player, username);
-                Console.WriteLine("Новый профиль успешно создан.");
-
-                // Можно выдать приветственный бонус новому игроку
-                player.Balance = 2000;
-                profileService.SaveData(player, username); // Сохраняем бонус
-                Console.WriteLine($"Вам начислен приветственный бонус: {player.Balance} монет.");
-            }
-
-            // Запускаем основное меню игры, передавая профиль и сервис для его сохранения
-            ShowMenu(player, profileService);
         }
 
         /// <summary>
-        /// Главное меню казино с выбором игр.
+        /// Меню с выбором игр (Блэкджек, Кости).
         /// </summary>
-        static void ShowMenu(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
+        static void ShowGameMenu(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
         {
-            while (true)
+            bool inGameMenu = true;
+            while (inGameMenu)
             {
-                Console.WriteLine($"\n--- Казино ---");
-                Console.WriteLine($"Игрок: {player.Username} | Баланс: {player.Balance} | Победы: {player.Wins} | Поражения: {player.Losses}");
+                Console.WriteLine($"\n--- Игровое меню ---");
+                Console.WriteLine($"Игрок: {player.Username} | Баланс: {player.Balance}");
                 Console.WriteLine("1. Играть в Блэкджек");
                 Console.WriteLine("2. Играть в Кости");
-                Console.WriteLine("3. Сохранить и выйти");
+                Console.WriteLine("3. Назад в главное меню");
 
-                int choice = InputService.ReadInt("Ваш выбор: ", 1, 3);
+                int gameChoice = InputService.ReadInt("Ваш выбор: ", 1, 3);
 
-                switch (choice)
+                switch (gameChoice)
                 {
                     case 1:
                         new BlackjackGame().Play(player);
+                        service.SaveData(player, player.Username); // Сохраняем баланс после игры
                         break;
                     case 2:
                         new DiceGame().Play(player);
+                        service.SaveData(player, player.Username); // Сохраняем баланс после игры
                         break;
                     case 3:
-                        // Перед выходом обязательно сохраняем текущее состояние профиля
-                        service.SaveData(player, player.Username);
-                        Console.WriteLine("Профиль сохранён. До свидания!");
-                        return; // Выходим из метода и завершаем программу
+                        inGameMenu = false; // Возвращаемся в главное меню
+                        break;
                 }
             }
         }
