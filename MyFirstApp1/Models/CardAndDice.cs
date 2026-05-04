@@ -59,38 +59,40 @@ namespace CasinoApp
     // 5. Структура Dice (Кубик)
     public struct Dice
     {
+        private readonly Random _random = new Random(); // Генератор для каждого кубика
+        private int _number; // Убираем readonly, чтобы можно было перекидывать
         private readonly int _min;
         private readonly int _max;
 
-        // Readonly свойство, которое возвращает результат броска
-        public int Number { get; }
-
-        private static readonly Random _random = new Random();
+        // Свойство Number остается как есть, оно просто возвращает значение
+        public int Number => _number;
 
         public Dice(int min, int max)
         {
-            // 5.1. Проверка корректности чисел в конструкторе
+            // Проверки параметров (как и было)
             if (min < 1 || min > int.MaxValue || max < 1 || max > int.MaxValue)
-            {
-                // 5.2. Выбрасываем наше кастомное исключение с понятным сообщением
                 throw new WrongDiceNumberException(
-                    $"Неверный диапазон. Задано: min={min}, max={max}. " +
-                    $"Допустимый диапазон для обоих чисел: от 1 до {int.MaxValue}."
+                    $"Неверный диапазон. Задано: min={min}, max={max}. Допустимый диапазон: от 1 до {int.MaxValue}."
                 );
-            }
-
             if (min > max)
-            {
                 throw new WrongDiceNumberException(
                     $"Неверный диапазон. Минимальное значение ({min}) не может быть больше максимального ({max})."
                 );
-            }
 
             _min = min;
             _max = max;
+            _number = 0; // Начальное значение
 
-            // При создании кубика сразу бросаем его (генерируем число)
-            Number = _random.Next(_min, _max + 1); // +1, так как верхняя граница в Random не включается
+            // Бросаем кубик сразу при создании
+            Roll();
+        }
+
+        // НОВЫЙ МЕТОД: Перекидывает кубик
+        public void Roll()
+        {
+            // Генерируем новое случайное число в заданном диапазоне
+            // +1 потому что верхняя граница в Next() не включается
+            _number = _random.Next(_min, _max + 1);
         }
     }
 }
