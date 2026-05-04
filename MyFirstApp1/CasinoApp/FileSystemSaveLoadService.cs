@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using CasinoApp.Services;
 
-namespace MyFirstApp1.CasinoApp
+namespace CasinoApp.Services
 {
     /// <summary>
     /// Универсальный сервис для сохранения и загрузки строковых данных в файловую систему.

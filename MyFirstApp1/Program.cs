@@ -1,9 +1,6 @@
-﻿using CasinoApp.Games.Blackjack;
-using CasinoApp.Games.Dice;
+﻿using System;
 using CasinoApp.Player;
 using CasinoApp.Services;
-using MyFirstApp1.CasinoApp;
-using System;
 
 namespace CasinoApp
 {
@@ -11,91 +8,52 @@ namespace CasinoApp
     {
         static void Main(string[] args)
         {
-            // Создаем сервисы. Они создадут нужные папки при запуске.
+            // Создаем сервисы для работы с данными.
+            // Они автоматически создадут папки data/profiles и data/files при первом запуске.
             ISaveLoadService<PlayerProfile> profileService = new PlayerProfileService();
             ISaveLoadService<string> fileSystemService = new FileSystemSaveLoadService("data/files");
 
-            // Переменная для хранения текущего игрока
+            // Переменная для хранения текущего игрока.
             PlayerProfile player = null;
 
-            // Флаг, чтобы управлять главным циклом программы
+            // Главный цикл программы.
             bool isRunning = true;
-
-            // ГЛАВНЫЙ ЦИКЛ ПРОГРАММЫ
             while (isRunning)
             {
                 Console.WriteLine("\n--- Главное меню Казино ---");
-                Console.WriteLine("1. Играть (Профиль игрока)");
-                Console.WriteLine("2. Тест сервиса файлов (Сохранить/Загрузить текст)");
+                Console.WriteLine("1. Играть");
+                Console.WriteLine("2. Тест сервиса файлов");
                 Console.WriteLine("3. Выход");
 
                 int mainChoice = InputService.ReadInt("Ваш выбор: ", 1, 3);
 
                 switch (mainChoice)
                 {
-                    case 1: // --- БЛОК ИГРЫ ---
-                        // Если игрок еще не вошел, просим его имя и загружаем профиль
+                    case 1: // Блок входа в игру и выбора игры
+                        // Если игрок еще не залогинен, просим его имя.
                         if (player == null)
                         {
-                            Console.Write("Введите ваше имя для входа или регистрации: ");
-                            string username = Console.ReadLine().Trim();
-
+                            string username = InputService.ReadString("Введите имя для регистрации или входа: ");
                             if (string.IsNullOrWhiteSpace(username))
                             {
                                 Console.WriteLine("Имя не может быть пустым.");
                                 break; // Возвращаемся в главное меню
                             }
 
-                            player = profileService.LoadData(username);
-
-                            if (player == null)
-                            {
-                                Console.WriteLine($"Привет, {username}! Создаем новый профиль.");
-                                player = new PlayerProfile(username);
-                                profileService.SaveData(player, username);
-                                Console.WriteLine("Профиль создан.");
-                            }
-                            else
-                            {
-                                Console.WriteLine($"С возвращением, {player.Username}!");
-                            }
+                            // Пробуем загрузить профиль. Если не найден - создаем новый.
+                            player = profileService.LoadData(username) ?? new PlayerProfile(username);
+                            profileService.SaveData(player, username); // Сохраняем новый или обновляем существующий
+                            Console.WriteLine($"Привет, {player.Username}! Ваш баланс: {player.Balance}");
                         }
-                        // Запускаем игровое меню, передавая профиль и сервис
-                        ShowGameMenu(player, profileService);
+                        // Показываем меню выбора игры (Блэкджек или Кости)
+                        ShowGameSelectionMenu(player, profileService);
                         break;
 
-                    case 2: // --- БЛОК ТЕСТА ФАЙЛОВОГО СЕРВИСА ---
-                        Console.WriteLine("\n--- Работа с текстовыми файлами ---");
-                        Console.WriteLine("1. Сохранить текст");
-                        Console.WriteLine("2. Загрузить текст");
-                        int fileChoice = InputService.ReadInt("Выберите действие: ", 1, 2);
-
-                        if (fileChoice == 1)
-                        {
-                            string textToSave = InputService.ReadString("Введите текст для сохранения: ");
-                            string fileId = InputService.ReadString("Введите имя файла (без расширения): ");
-                            fileSystemService.SaveData(textToSave, fileId);
-                            Console.WriteLine("Текст успешно сохранен в файл data/files/" + fileId + ".txt");
-                        }
-                        else if (fileChoice == 2)
-                        {
-                            string fileId = InputService.ReadString("Введите имя файла для загрузки: ");
-                            string loadedText = fileSystemService.LoadData(fileId);
-
-                            if (loadedText != null)
-                            {
-                                Console.WriteLine("\n--- Содержимое файла ---");
-                                Console.WriteLine(loadedText);
-                                Console.WriteLine("----------------------");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Файл не найден или пуст.");
-                            }
-                        }
+                    case 2: // Блок тестирования файлового сервиса
+                        TestFileSystemService(fileSystemService);
                         break;
 
-                    case 3: // --- ВЫХОД ---
+                    case 3: // Выход из программы
                         isRunning = false;
                         Console.WriteLine("До свидания!");
                         break;
@@ -104,14 +62,14 @@ namespace CasinoApp
         }
 
         /// <summary>
-        /// Меню с выбором игр (Блэкджек, Кости).
+        /// Меню выбора конкретной игры (Блэкджек или Кости).
         /// </summary>
-        static void ShowGameMenu(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
+        static void ShowGameSelectionMenu(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
         {
-            bool inGameMenu = true;
-            while (inGameMenu)
+            bool inMenu = true;
+            while (inMenu)
             {
-                Console.WriteLine($"\n--- Игровое меню ---");
+                Console.WriteLine($"\n--- Выбор игры ---");
                 Console.WriteLine($"Игрок: {player.Username} | Баланс: {player.Balance}");
                 Console.WriteLine("1. Играть в Блэкджек");
                 Console.WriteLine("2. Играть в Кости");
@@ -122,16 +80,100 @@ namespace CasinoApp
                 switch (gameChoice)
                 {
                     case 1:
-                        new BlackjackGame().Play(player);
-                        service.SaveData(player, player.Username); // Сохраняем баланс после игры
+                        StartBlackjack(player, service);
                         break;
                     case 2:
-                        new DiceGame().Play(player);
-                        service.SaveData(player, player.Username); // Сохраняем баланс после игры
+                        StartDice(player, service);
                         break;
                     case 3:
-                        inGameMenu = false; // Возвращаемся в главное меню
+                        inMenu = false; // Возвращаемся в главное меню
                         break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Запускает игру в Блэкджек с обработкой ошибок.
+        /// </summary>
+        static void StartBlackjack(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
+        {
+            decimal bet = InputService.ReadDecimal("Ваша ставка в Блэкджек: ");
+            
+            try
+            {
+                // Создаем объект игры. Конструктор проверит ставку и сразу запустит PlayGame().
+                var game = new CasinoApp.Games.Blackjack.BlackjackGame(player, bet);
+
+                // Сохраняем изменения в профиле (баланс, победы/поражения) на диск.
+                service.SaveData(player, player.Username);
+            }
+            catch (ArgumentException ex)
+            {
+                // Красиво выводим ошибку, если ставка была некорректной.
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Ошибка: {ex.Message}");
+                Console.ResetColor();
+            }
+        }
+
+        /// <summary>
+        /// Запускает игру в Кости с обработкой ошибок.
+        /// </summary>
+        static void StartDice(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
+        {
+            decimal bet = InputService.ReadDecimal("Ваша ставка в Кости: "); // Читаем ставку здесь
+
+            try
+            {
+                int guess = InputService.ReadInt("Угадайте число (1-6): ", 1, 6); // Читаем угадываемое число здесь
+
+                // Передаем все данные в конструктор игры
+                var game = new CasinoApp.Games.Dice.DiceGame(player, bet, guess);
+
+                service.SaveData(player, player.Username);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Ошибка: {ex.Message}");
+                Console.ResetColor();
+            }
+        }
+
+        /// <summary>
+        /// Тестовый метод для проверки работы FileSystemSaveLoadService.
+        /// </summary>
+        static void TestFileSystemService(ISaveLoadService<string> fileSystemService)
+        {
+            Console.WriteLine("\n--- Работа с текстовыми файлами ---");
+            Console.WriteLine("1. Сохранить текст");
+            Console.WriteLine("2. Загрузить текст");
+            
+            int fileChoice = InputService.ReadInt("Выберите действие: ", 1, 2);
+
+            if (fileChoice == 1)
+            {
+                string textToSave = InputService.ReadString("Введите текст для сохранения: ");
+                string fileId = InputService.ReadString("Введите имя файла (без расширения): ");
+                
+                fileSystemService.SaveData(textToSave, fileId);
+                Console.WriteLine($"Текст успешно сохранен в файл data/files/{fileId}.txt");
+            }
+            else if (fileChoice == 2)
+            {
+                string fileId = InputService.ReadString("Введите имя файла для загрузки: ");
+                
+                string loadedText = fileSystemService.LoadData(fileId);
+                
+                if (loadedText != null)
+                {
+                    Console.WriteLine("\n--- Содержимое файла ---");
+                    Console.WriteLine(loadedText);
+                    Console.WriteLine("----------------------");
+                }
+                else
+                {
+                    Console.WriteLine("Файл не найден или пуст.");
                 }
             }
         }

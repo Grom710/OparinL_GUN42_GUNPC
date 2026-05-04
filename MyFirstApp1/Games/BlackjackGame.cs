@@ -1,142 +1,164 @@
-﻿// Обновляем using и добавляем CasinoApp для структур Card и Suit/Rank
+﻿// Обновляем using
+using CasinoApp;
+using CasinoApp.Games;
+using CasinoApp.Player;
+using CasinoApp.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CasinoApp.Player;
-using CasinoApp.Services;
-using CasinoApp;
 
 namespace CasinoApp.Games.Blackjack
 {
-    public class BlackjackGame
+    public class BlackjackGame : CasinoGameBase
     {
         private readonly Random _random = new Random();
 
-        // Метод для получения случайной масти
-        private Suit GetRandomSuit() => (Suit)_random.Next(0, 4);
+        private PlayerProfile _player;
+        private decimal _bet;
 
-        // Метод для получения случайной величины карты (от Six до Ace)
-        private Rank GetRandomRank() => (Rank)_random.Next(6, 15); // 6 - это Six, 14 - это Ace
+        private List<Card> _playerCards;
+        private List<Card> _dealerCards;
 
-        // Метод для подсчета очков с учетом "гибкости" Туза
-        private int CalculateScore(List<Card> cards)
+        public BlackjackGame(PlayerProfile player, decimal bet)
         {
-            int score = 0;
-            int aceCount = 0;
+            if (player == null)
+                throw new ArgumentNullException(nameof(player), "Игрок не задан.");
 
-            foreach (var card in cards)
-            {
-                switch (card.CardRank)
-                {
-                    case Rank.Jack:
-                    case Rank.Queen:
-                    case Rank.King:
-                        score += 10;
-                        break;
-                    case Rank.Ace:
-                        score += 11; // Считаем Туза за 11 пока
-                        aceCount++;
-                        break;
-                    default:
-                        score += (int)card.CardRank; // Для Six(6) ... Ten(10) работает напрямую
-                        break;
-                }
-            }
+            if (bet <= 0 || bet > player.Balance)
+                throw new ArgumentOutOfRangeException(nameof(bet), "Ставка вне допустимого диапазона.");
 
-            // Если перебор и есть тузы, превращаем их из 11 в 1 пока не перестанем перебирать
-            while (score > 21 && aceCount > 0)
-            {
-                score -= 10; // Было 11, стало 1 (разница 10)
-                aceCount--;
-            }
+            _player = player;
+            _bet = bet;
 
-            return score;
+            this.OnWin += UpdateProfileOnWin;
+            this.OnLoose += UpdateProfileOnLoose;
+
+            PlayGame(); // Запускаем игру после инициализации
         }
 
-        public void Play(PlayerProfile player)
+        protected override void FactoryMethod()
         {
-            Console.WriteLine("--- Блэкджек (21) ---");
-            decimal bet = InputService.ReadDecimal("Ваша ставка: ");
-            if (bet > player.Balance)
-            {
-                Console.WriteLine("Недостаточно средств.");
-                return;
-            }
+            Console.WriteLine("[Blackjack] Подготовка колоды...");
+        }
 
-            List<Card> playerCards = new List<Card>
-             {
-                 new Card(GetRandomSuit(), GetRandomRank()),
-                 new Card(GetRandomSuit(), GetRandomRank())
-             };
+        public override void PlayGame()
+        {
+            Console.WriteLine("--- Блэкджек (Архитектура v2) ---");
 
-            List<Card> dealerCards = new List<Card>
-             {
-                 new Card(GetRandomSuit(), GetRandomRank()),
-                 new Card(GetRandomSuit(), GetRandomRank())
-             };
-
-            Console.WriteLine($"Ваши карты: {string.Join(", ", playerCards)}");
-            Console.WriteLine($"Карты дилера: {dealerCards[0]}, *");
+            InitializeRound();
 
             bool isPlayerTurn = true;
             while (isPlayerTurn)
             {
-                Console.WriteLine("\nВаш ход:");
-                Console.WriteLine("1 - Взять карту");
-                Console.WriteLine("2 - Остановиться");
+                DisplayRoundStatus();
+                int choice = InputService.ReadInt("1 - Взять карту | 2 - Остановиться: ", 1, 2);
 
-                int choice = InputService.ReadInt("Ваш выбор: ", 1, 2);
+                if (choice == 1) HitPlayer();
 
-                switch (choice)
+                if (CalculateScore(_playerCards) > 21)
                 {
-                    case 1:
-                        playerCards.Add(new Card(GetRandomSuit(), GetRandomRank()));
-                        Console.WriteLine($"Вы взяли карту. Ваши карты: {string.Join(", ", playerCards)}");
-
-                        if (CalculateScore(playerCards) > 21)
-                        {
-                            Console.WriteLine("Перебор! Вы проиграли.");
-                            player.Balance -= bet;
-                            player.Losses++;
-                            return; // Завершаем игру немедленно при переборе у игрока
-                        }
-                        break;
-                    case 2:
-                        isPlayerTurn = false;
-                        break;
+                    OnLooseInvoke("Перебор у игрока!");
+                    return; // Конец игры
                 }
+
+                if (choice == 2) isPlayerTurn = false;
             }
 
-            Console.WriteLine($"\nКарты дилера: {string.Join(", ", dealerCards)}");
+            DealerTurn();
+            DetermineWinner();
+        }
 
-            // Ход дилера: берет карты, пока у него меньше 17 очков.
-            while (CalculateScore(dealerCards) < 17)
-            {
-                dealerCards.Add(new Card(GetRandomSuit(), GetRandomRank()));
-                Console.WriteLine($"Дилер взял карту. Теперь у него: {string.Join(", ", dealerCards)}");
-            }
+        #region Приватные методы механики (Разделение логики по ТЗ)
 
-            int playerSum = CalculateScore(playerCards);
-            int dealerSum = CalculateScore(dealerCards);
+        private void InitializeRound()
+        {
+            _playerCards = new List<Card> { DrawCard(), DrawCard() };
+            _dealerCards = new List<Card> { DrawCard(), DrawCard() };
+        }
 
-            Console.WriteLine($"\nВаши очки: {playerSum}. Очки дилера: {dealerSum}.");
+        private void DisplayRoundStatus()
+        {
+            Console.WriteLine($"\nВаши карты: {string.Join(", ", _playerCards)} (Очки: {CalculateScore(_playerCards)})");
+            Console.WriteLine($"Карты дилера: {_dealerCards[0]}, *");
+        }
 
-            if (dealerSum > 21 || playerSum > dealerSum)
+        private void HitPlayer()
+        {
+            var card = DrawCard();
+            _playerCards.Add(card);
+            Console.WriteLine($"Вы взяли: {card}");
+        }
+
+        private void DealerTurn()
+        {
+            Console.WriteLine($"\nКарты дилера: {string.Join(", ", _dealerCards)}");
+            while (CalculateScore(_dealerCards) < 17)
             {
-                player.Balance += bet * 2;
-                player.Wins++;
-                Console.WriteLine($"Вы выиграли! Ваш баланс: {player.Balance}");
-            }
-            else if (playerSum == dealerSum)
-            {
-                Console.WriteLine($"Ничья. Ваш баланс: {player.Balance}");
-            }
-            else
-            {
-                player.Balance -= bet;
-                player.Losses++;
-                Console.WriteLine($"Вы проиграли. Ваш баланс: {player.Balance}");
+                var card = DrawCard();
+                _dealerCards.Add(card);
+                Console.WriteLine($"Дилер взял: {card}");
+                Console.WriteLine($"Итого у дилера: {CalculateScore(_dealerCards)}");
             }
         }
+
+        private void DetermineWinner()
+        {
+            int playerSum = CalculateScore(_playerCards);
+            int dealerSum = CalculateScore(_dealerCards);
+
+            Console.WriteLine($"\nИтог: У вас {playerSum}, у дилера {dealerSum}.");
+
+            if (dealerSum > 21 || playerSum > dealerSum)
+                OnWinInvoke("Вы выиграли! Дилер перебрал или у вас больше очков.");
+
+            else if (playerSum == dealerSum)
+                OnDrawInvoke("Ничья!");
+
+            else
+                OnLooseInvoke("Вы проиграли. У дилера больше очков.");
+        }
+
+        #endregion
+
+        #region Вспомогательные методы
+
+        private Card DrawCard() => new Card(GetRandomSuit(), GetRandomRank());
+        private Suit GetRandomSuit() => (Suit)_random.Next(0, 4);
+        private Rank GetRandomRank() => (Rank)_random.Next(6, 15);
+
+        private int CalculateScore(List<Card> cards)
+        {
+            int score = cards.Sum(c => c.CardRank == Rank.Ace ? 11 : (int)c.CardRank);
+            int aceCount = cards.Count(c => c.CardRank == Rank.Ace);
+
+            while (score > 21 && aceCount > 0)
+            {
+                score -= 10; // Туз с 11 превращается в 1
+                aceCount--;
+            }
+            return score;
+        }
+
+        #endregion
+
+        #region Обработчики событий (Обновление профиля)
+
+        private void UpdateProfileOnWin(string message)
+        {
+            _player.Balance += _bet * 2;
+            _player.Wins++;
+            Console.WriteLine(message);
+            Console.WriteLine($"Баланс: {_player.Balance}");
+        }
+
+        private void UpdateProfileOnLoose(string message)
+        {
+            _player.Balance -= _bet;
+            _player.Losses++;
+            Console.WriteLine(message);
+            Console.WriteLine($"Баланс: {_player.Balance}");
+        }
+
+        #endregion
     }
 }

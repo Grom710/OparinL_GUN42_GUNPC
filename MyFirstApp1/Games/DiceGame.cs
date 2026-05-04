@@ -1,74 +1,98 @@
-﻿// Заменяем старые using на новые, включая наше пространство имен с CardAndDice
-using System;
-using System.Collections.Generic;
-using CasinoApp.Player;
-using CasinoApp.Services;
+﻿// CasinoApp/Games/Dice/DiceGame.cs
 
+using System;
+using CasinoApp.Player;
+using CasinoApp.Games;
+// using CasinoApp.Services; // Этот using здесь не нужен и даже вреден
 
 namespace CasinoApp.Games.Dice
 {
-    public class DiceGame
+    public class DiceGame : CasinoGameBase
     {
         private readonly Random _random = new Random();
+        private PlayerProfile _player;
+        private decimal _bet;
 
-        // Метод Play теперь использует новую структуру Dice для валидации ставок и бросков
-        public void Play(PlayerProfile player)
+        // 1. Создаем ЧАСТНОЕ ПОЛЕ для хранения угадываемого числа
+        private int _guess;
+
+        public DiceGame(PlayerProfile player, decimal bet, int guess)
         {
-            Console.WriteLine("--- Игра в Кости (с проверкой) ---");
-
-            decimal bet = InputService.ReadDecimal("Ваша ставка: ");
+            // Проверки параметров (как и раньше)
+            if (player == null)
+                throw new ArgumentNullException(nameof(player), "Профиль игрока не может быть null.");
+            if (bet <= 0)
+                throw new ArgumentException("Ставка должна быть больше нуля.", nameof(bet));
             if (bet > player.Balance)
+                throw new ArgumentException("Ставка превышает баланс игрока.", nameof(bet));
+
+            _player = player;
+            _bet = bet;
+
+            // 2. Сохраняем пришедшее число в наше поле
+            _guess = guess;
+
+            this.OnWin += HandleWin;
+            this.OnLoose += HandleLoose;
+            this.OnDraw += HandleDraw;
+
+            // Запускаем игру
+            PlayGame();
+        }
+
+        protected override void FactoryMethod() { /* Логика */ }
+
+        // 3. Метод PlayGame теперь БЕЗ ПАРАМЕТРОВ, как требует базовый класс!
+        public override void PlayGame()
+        {
+            Console.WriteLine("--- Игра в Кости (Архитектура v2) ---");
+
+            CasinoApp.Dice dice = new CasinoApp.Dice(1, 6);
+
+            Console.WriteLine($"Бросок! Выпало число: {dice.Number}");
+
+            // 4. Используем наше поле _guess вместо параметра
+            if (_guess == dice.Number)
             {
-                Console.WriteLine("Недостаточно средств.");
-                return;
+                OnWinInvoke($"Угадали! Выпало {dice.Number}.");
             }
-
-            int guess;
-            while (true)
+            else if (Math.Abs(_guess - dice.Number) == 1)
             {
-                guess = InputService.ReadInt("Угадайте число (1-6): ", 1, 6);
-
-                // Проверка диапазона ставки относительно баланса игрока
-                if (bet * 4 > player.Balance && guess == 6) // Пример сложной логики, если нужна
-                {
-                    Console.WriteLine("Ставка слишком высока для такого выигрыша.");
-                    continue;
-                }
-                break;
+                OnDrawInvoke($"Почти угадали! Разница всего в 1 очко.");
+                _player.Balance += _bet;
             }
-
-            try
+            else
             {
-                // Создаем экземпляр структуры Dice с диапазоном 1-6.
-                // Если бы мы передали неверные числа, вылетело бы исключение.
-                CasinoApp.Dice dice = new CasinoApp.Dice(1, 6);
-
-                Console.WriteLine($"Бросок! Выпало число: {dice.Number}");
-
-                if (guess == dice.Number)
-                {
-                    player.Balance += bet * 4;
-                    player.Wins++;
-                    Console.WriteLine($"Угадали! Ваш баланс: {player.Balance}");
-                }
-                else if (Math.Abs(guess - dice.Number) == 1)
-                {
-                    player.Balance += bet * 2;
-                    player.Wins++;
-                    Console.WriteLine($"Почти угадали! Ваш баланс: {player.Balance}");
-                }
-                else
-                {
-                    player.Balance -= bet;
-                    player.Losses++;
-                    Console.WriteLine($"Не угадали. Ваш баланс: {player.Balance}");
-                }
+                OnLooseInvoke($"Не угадали. Выпало {dice.Number}.");
+                _player.Balance -= _bet;
             }
-            catch (WrongDiceNumberException ex)
-            {
-                // Обработка нашей ошибки (хотя в игре она не должна возникнуть)
-                Console.WriteLine($"Критическая ошибка игры: {ex.Message}");
-            }
+        }
+
+
+        // --- Приватные методы для обработки событий ---
+        // Это разделение логики, как требовалось в ТЗ.
+
+        private void HandleWin(string message)
+        {
+            Console.WriteLine(message);
+            _player.Balance += _bet * 4;
+            _player.Wins++;
+            Console.WriteLine($"Ваш баланс: {_player.Balance}");
+        }
+
+        private void HandleLoose(string message)
+        {
+            Console.WriteLine(message);
+            _player.Balance -= _bet;
+            _player.Losses++;
+            Console.WriteLine($"Ваш баланс: {_player.Balance}");
+        }
+
+        private void HandleDraw(string message)
+        {
+            Console.WriteLine(message);
+            Console.WriteLine("Вам возвращается ставка.");
+            Console.WriteLine($"Ваш баланс: {_player.Balance}");
         }
     }
 }
