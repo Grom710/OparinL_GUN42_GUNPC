@@ -1,17 +1,57 @@
-﻿// CasinoApp/Games/Blackjack/BlackjackGame.cs
+﻿// Обновляем using и добавляем CasinoApp для структур Card и Suit/Rank
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CasinoApp.Player;
 using CasinoApp.Services;
+using CasinoApp;
 
 namespace CasinoApp.Games.Blackjack
 {
     public class BlackjackGame
     {
-        private readonly Random _random = new();
+        private readonly Random _random = new Random();
 
-        // Метод DrawCard остается прежним
-        private int DrawCard() => _random.Next(1, 12); // Карты от 1 до 11
+        // Метод для получения случайной масти
+        private Suit GetRandomSuit() => (Suit)_random.Next(0, 4);
+
+        // Метод для получения случайной величины карты (от Six до Ace)
+        private Rank GetRandomRank() => (Rank)_random.Next(6, 15); // 6 - это Six, 14 - это Ace
+
+        // Метод для подсчета очков с учетом "гибкости" Туза
+        private int CalculateScore(List<Card> cards)
+        {
+            int score = 0;
+            int aceCount = 0;
+
+            foreach (var card in cards)
+            {
+                switch (card.CardRank)
+                {
+                    case Rank.Jack:
+                    case Rank.Queen:
+                    case Rank.King:
+                        score += 10;
+                        break;
+                    case Rank.Ace:
+                        score += 11; // Считаем Туза за 11 пока
+                        aceCount++;
+                        break;
+                    default:
+                        score += (int)card.CardRank; // Для Six(6) ... Ten(10) работает напрямую
+                        break;
+                }
+            }
+
+            // Если перебор и есть тузы, превращаем их из 11 в 1 пока не перестанем перебирать
+            while (score > 21 && aceCount > 0)
+            {
+                score -= 10; // Было 11, стало 1 (разница 10)
+                aceCount--;
+            }
+
+            return score;
+        }
 
         public void Play(PlayerProfile player)
         {
@@ -23,17 +63,24 @@ namespace CasinoApp.Games.Blackjack
                 return;
             }
 
-            List<int> playerCards = new() { DrawCard(), DrawCard() };
-            List<int> dealerCards = new() { DrawCard(), DrawCard() };
+            List<Card> playerCards = new List<Card>
+             {
+                 new Card(GetRandomSuit(), GetRandomRank()),
+                 new Card(GetRandomSuit(), GetRandomRank())
+             };
 
-            Console.WriteLine($"Ваши карты: {string.Join(", ", playerCards)} (Сумма: {SumCards(playerCards)})");
+            List<Card> dealerCards = new List<Card>
+             {
+                 new Card(GetRandomSuit(), GetRandomRank()),
+                 new Card(GetRandomSuit(), GetRandomRank())
+             };
+
+            Console.WriteLine($"Ваши карты: {string.Join(", ", playerCards)}");
             Console.WriteLine($"Карты дилера: {dealerCards[0]}, *");
 
-            // --- ИЗМЕНЕННЫЙ ЦИКЛ ХОДА ИГРОКА ---
             bool isPlayerTurn = true;
             while (isPlayerTurn)
             {
-                // Выводим меню с вариантами 1 и 2
                 Console.WriteLine("\nВаш ход:");
                 Console.WriteLine("1 - Взять карту");
                 Console.WriteLine("2 - Остановиться");
@@ -42,38 +89,35 @@ namespace CasinoApp.Games.Blackjack
 
                 switch (choice)
                 {
-                    case 1: // Взять карту
-                        playerCards.Add(DrawCard());
-                        Console.WriteLine($"Вы взяли карту. Ваши карты: {string.Join(", ", playerCards)} (Сумма: {SumCards(playerCards)})");
+                    case 1:
+                        playerCards.Add(new Card(GetRandomSuit(), GetRandomRank()));
+                        Console.WriteLine($"Вы взяли карту. Ваши карты: {string.Join(", ", playerCards)}");
 
-                        // Проверка на перебор (больше 21)
-                        if (SumCards(playerCards) > 21)
+                        if (CalculateScore(playerCards) > 21)
                         {
                             Console.WriteLine("Перебор! Вы проиграли.");
                             player.Balance -= bet;
                             player.Losses++;
-                            return; // Завершаем игру
+                            return; // Завершаем игру немедленно при переборе у игрока
                         }
                         break;
-
-                    case 2: // Остановиться
-                        Console.WriteLine("Вы решили остановиться.");
-                        isPlayerTurn = false; // Выходим из цикла хода игрока
+                    case 2:
+                        isPlayerTurn = false;
                         break;
                 }
             }
 
-            // --- ХОД ДИЛЕРА (остается без изменений) ---
             Console.WriteLine($"\nКарты дилера: {string.Join(", ", dealerCards)}");
-            while (SumCards(dealerCards) < 17)
+
+            // Ход дилера: берет карты, пока у него меньше 17 очков.
+            while (CalculateScore(dealerCards) < 17)
             {
-                dealerCards.Add(DrawCard());
+                dealerCards.Add(new Card(GetRandomSuit(), GetRandomRank()));
                 Console.WriteLine($"Дилер взял карту. Теперь у него: {string.Join(", ", dealerCards)}");
             }
 
-            // --- ПОДСЧЕТ РЕЗУЛЬТАТА ---
-            int playerSum = SumCards(playerCards);
-            int dealerSum = SumCards(dealerCards);
+            int playerSum = CalculateScore(playerCards);
+            int dealerSum = CalculateScore(dealerCards);
 
             Console.WriteLine($"\nВаши очки: {playerSum}. Очки дилера: {dealerSum}.");
 
@@ -94,7 +138,5 @@ namespace CasinoApp.Games.Blackjack
                 Console.WriteLine($"Вы проиграли. Ваш баланс: {player.Balance}");
             }
         }
-
-        private int SumCards(List<int> cards) => cards.Sum();
     }
 }
