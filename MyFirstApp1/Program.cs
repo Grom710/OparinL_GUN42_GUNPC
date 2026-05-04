@@ -1,9 +1,9 @@
-﻿// CasinoApp/Program.cs
-using System;
-using CasinoApp.Games.Blackjack;
+﻿using CasinoApp.Games.Blackjack;
 using CasinoApp.Games.Dice;
 using CasinoApp.Player;
 using CasinoApp.Services;
+using MyFirstApp1.CasinoApp;
+using System;
 
 namespace CasinoApp
 {
@@ -11,47 +11,48 @@ namespace CasinoApp
     {
         static void Main(string[] args)
         {
-            // Создаем экземпляр сервиса. Он реализует ISaveLoadService<PlayerProfile>
+            // Создаем экземпляры наших сервисов.
+            // Профиль игрока сохраняется в папке "data/profiles"
             ISaveLoadService<PlayerProfile> profileService = new PlayerProfileService();
 
-            string username;
+            // Универсальный сервис для работы с текстовыми файлами в папке "data/files"
+            ISaveLoadService<string> fileSystemService = new FileSystemSaveLoadService("data/files");
 
-            // 1. Запрашиваем имя игрока (ID)
-            Console.Write("Введите ваше имя для входа/регистрации: ");
-            username = Console.ReadLine().Trim();
+            // --- БЛОК ВХОДА В ИГРУ ---
+            Console.WriteLine("Добро пожаловать в Казино!");
+            string username = InputService.ReadString("Введите ваше имя для входа или регистрации: ");
 
             if (string.IsNullOrWhiteSpace(username))
             {
-                Console.WriteLine("Имя не может быть пустым.");
+                Console.WriteLine("Имя пользователя не может быть пустым. Выход из программы.");
                 return;
             }
 
-            // 2. Пробуем загрузить профиль по ID (имени)
+            // Пробуем загрузить существующий профиль по имени (ID)
             PlayerProfile player = profileService.LoadData(username);
 
-            // 3. Если профиля нет (null), создаем новый и сразу сохраняем его
+            // Если профиля нет (player == null), создаем новый
             if (player == null)
             {
-                Console.WriteLine($"Привет, {username}! Создаем новый профиль.");
+                Console.WriteLine($"Профиль для '{username}' не найден. Создаем новый.");
                 player = new PlayerProfile(username);
-                profileService.SaveData(player, username); // Сохраняем новый профиль
-                Console.WriteLine("Профиль успешно создан.");
-                player.Balance = 1500; // Можно выдать приветственный бонус новому игроку
-                profileService.SaveData(player, username); // Сохраняем изменения с бонусом
+                // Сразу сохраняем новый пустой профиль, чтобы файл создался
+                profileService.SaveData(player, username);
+                Console.WriteLine("Новый профиль успешно создан.");
+
+                // Можно выдать приветственный бонус новому игроку
+                player.Balance = 2000;
+                profileService.SaveData(player, username); // Сохраняем бонус
+                Console.WriteLine($"Вам начислен приветственный бонус: {player.Balance} монет.");
             }
 
+            // Запускаем основное меню игры, передавая профиль и сервис для его сохранения
             ShowMenu(player, profileService);
         }
 
-        static PlayerProfile CreateNewProfile(ISaveLoadService<PlayerProfile> service)
-        {
-            string username = InputService.ReadString("Введите имя игрока: ");
-            PlayerProfile newPlayer = new(username);
-            service.SaveData(newPlayer, username);
-            Console.WriteLine($"Профиль создан. Баланс: {newPlayer.Balance}");
-            return newPlayer;
-        }
-
+        /// <summary>
+        /// Главное меню казино с выбором игр.
+        /// </summary>
         static void ShowMenu(PlayerProfile player, ISaveLoadService<PlayerProfile> service)
         {
             while (true)
@@ -73,10 +74,10 @@ namespace CasinoApp
                         new DiceGame().Play(player);
                         break;
                     case 3:
-                        // Сохраняем данные перед выходом через интерфейс
+                        // Перед выходом обязательно сохраняем текущее состояние профиля
                         service.SaveData(player, player.Username);
                         Console.WriteLine("Профиль сохранён. До свидания!");
-                        return;
+                        return; // Выходим из метода и завершаем программу
                 }
             }
         }
