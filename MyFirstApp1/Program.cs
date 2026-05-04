@@ -101,21 +101,38 @@ namespace CasinoApp
             
             try
             {
-                // Создаем объект игры. Конструктор проверит ставку и сразу запустит PlayGame().
+                // Создаем игру БЕЗ запуска сразу!
                 var game = new CasinoApp.Games.Blackjack.BlackjackGame(player, bet);
 
-                // Сохраняем изменения в профиле (баланс, победы/поражения) на диск.
+                bool inPlayerTurnLoop = true;
+
+                // Запускаем цикл взаимодействия с игроком здесь!
+                while (inPlayerTurnLoop)
+                {
+                    // Просим пользователя сделать выбор в Program.cs
+                    int choice = InputService.ReadInt("Ваш ход (1-Взять / 2-Стоп): ", 1, 2);
+
+                    // Передаем выбор в игру через наш новый метод-шлюз
+                    game.SetPlayerChoice(choice);
+
+                    // Просим игру выполнить один шаг с этим выбором.
+                    // Метод PlayOneStep будет выполнять логику одного хода.
+                    inPlayerTurnLoop = game.PlayOneStep();
+
+                    // Если игра закончилась (игрок перебрал или остановился), выходим из цикла.
+                    if (!inPlayerTurnLoop || player.Balance <= 0)
+                        break;
+                }
+
                 service.SaveData(player, player.Username);
             }
             catch (ArgumentException ex)
             {
-                // Красиво выводим ошибку, если ставка была некорректной.
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Ошибка: {ex.Message}");
                 Console.ResetColor();
             }
         }
-
         /// <summary>
         /// Запускает игру в Кости с обработкой ошибок.
         /// </summary>
