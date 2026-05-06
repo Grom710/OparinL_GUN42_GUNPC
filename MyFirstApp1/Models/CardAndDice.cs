@@ -1,8 +1,4 @@
-﻿// CasinoApp/CardAndDice.cs
-
-using System;
-
-namespace CasinoApp
+﻿namespace CasinoApp
 {
     // 1. Перечисление мастей карт
     public enum Suit

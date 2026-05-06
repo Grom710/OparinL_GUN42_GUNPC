@@ -7,6 +7,7 @@ namespace CasinoApp.Games
 
     public abstract class CasinoGameBase
     {
+
         public event GameResultHandler OnWin;
         public event GameResultHandler OnLoose;
         public event GameResultHandler OnDraw;

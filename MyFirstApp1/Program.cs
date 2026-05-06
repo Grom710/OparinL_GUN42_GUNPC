@@ -1,6 +1,4 @@
-﻿using System;
-using CasinoApp.CasinoApp;
-using CasinoApp.Player;
+﻿using CasinoApp.Player;
 using CasinoApp.Services;
 
 namespace CasinoApp

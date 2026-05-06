@@ -1,10 +1,5 @@
-﻿using CasinoApp; 
-using CasinoApp.Games; 
-using CasinoApp.Player; 
+﻿using CasinoApp.Player; 
 using CasinoApp.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CasinoApp.Games.Blackjack
 {
@@ -37,7 +32,7 @@ namespace CasinoApp.Games.Blackjack
             PlayGame();
         }
 
-        protected override void FactoryMethod() { /* Логика подготовки */ }
+        protected override void FactoryMethod() { }
 
         public override void PlayGame()
         {
@@ -60,7 +55,7 @@ namespace CasinoApp.Games.Blackjack
 
                 if (choice == 1)
                 {
-                    var card = DrawCard();
+                    var card = DrawCard(); 
                     _playerCards.Add(card);
                     Console.WriteLine($"Вы взяли карту: {card}");
 
@@ -85,6 +80,7 @@ namespace CasinoApp.Games.Blackjack
             }
         }
 
+
         #region Приватные методы механики
 
         private Card DrawCard()
@@ -102,7 +98,7 @@ namespace CasinoApp.Games.Blackjack
 
             while (score > 21 && aceCount > 0)
             {
-                score -= 10;
+                score -= 10; 
                 aceCount--;
             }
             return score;
@@ -113,7 +109,7 @@ namespace CasinoApp.Games.Blackjack
             Console.WriteLine($"\nКарты дилера: {string.Join(", ", _dealerCards)}");
             while (CalculateScore(_dealerCards) < 17)
             {
-                var card = DrawCard();
+                var card = DrawCard(); 
                 _dealerCards.Add(card);
                 Console.WriteLine($"Дилер взял карту: {card}");
             }

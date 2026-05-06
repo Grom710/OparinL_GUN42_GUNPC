@@ -1,21 +1,14 @@
-﻿// CasinoApp/Services/PlayerProfileService.cs
-using System.IO;
-using System.Text.Json;
+﻿using System.Text.Json;
 using CasinoApp.Player;
-using CasinoApp.Services; // Не забудь добавить using для нового интерфейса
 
 namespace CasinoApp.Services
 {
-    // Класс реализует интерфейс, где T - это PlayerProfile
     public class PlayerProfileService : ISaveLoadService<PlayerProfile>
     {
-        // Путь к файлу можно сделать константой или передавать через конструктор
         private const string BasePath = "data/";
 
-        // Реализация метода из интерфейса ISaveLoadService
         public void SaveData(PlayerProfile data, string id)
         {
-            // Убедимся, что папка data существует
             Directory.CreateDirectory(BasePath);
 
             string filePath = Path.Combine(BasePath, id + ".json");
