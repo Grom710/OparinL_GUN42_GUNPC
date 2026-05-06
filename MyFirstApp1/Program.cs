@@ -24,14 +24,11 @@ namespace CasinoApp
                 profileService.SaveData(player, username);
                 Console.WriteLine("Профиль успешно создан.");
 
-                // Выдаем приветственный бонус новому игроку
                 player.Balance = 2000;
                 profileService.SaveData(player, username);
                 Console.WriteLine($"Вам начислен приветственный бонус: {player.Balance} монет.");
             }
 
-            // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
-            // Создаем объект Казино и запускаем игру через интерфейс
             IGame casinoManager = new Casino(player, profileService);
             casinoManager.StartGame();
 

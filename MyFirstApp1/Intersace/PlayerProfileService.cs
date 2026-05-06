@@ -25,13 +25,12 @@ namespace CasinoApp.Services
             Console.WriteLine($"Данные сохранены в файл: {filePath}");
         }
 
-        // Реализация метода из интерфейса ISaveLoadService
         public PlayerProfile LoadData(string id)
         {
             string filePath = Path.Combine(BasePath, id + ".json");
 
             if (!File.Exists(filePath))
-                return null; // Или return default(PlayerProfile);
+                return null; 
 
             try
             {
@@ -45,25 +44,14 @@ namespace CasinoApp.Services
             }
         }
 
-        // Теперь создадим удобные методы-обертки для основной программы
 
         public void SaveProfile(PlayerProfile profile)
         {
-            // Вызываем реализацию интерфейса, передавая имя игрока как ID
             SaveData(profile, profile.Username);
         }
 
         public PlayerProfile LoadProfile()
         {
-            // В данном случае ID нам неизвестен заранее при простом чтении,
-            // поэтому этот метод требует доработки логики поиска файлов.
-            // Для простоты примера оставим старый подход или изменим логику.
-
-            // В текущем виде этот метод не может работать с новым интерфейсом напрямую,
-            // так как ему нужен ID. Поэтому в Program.cs мы будем вызывать LoadData напрямую.
-
-            // Этот метод можно удалить или оставить для совместимости,
-            // но правильнее будет использовать LoadData в Program.cs.
 
             return null;
         }

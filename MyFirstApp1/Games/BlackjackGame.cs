@@ -1,6 +1,6 @@
-﻿using CasinoApp; // Для доступа к константе MaxBankValue
-using CasinoApp.Games; // Базовый абстрактный класс
-using CasinoApp.Player; // Для профиля игрока
+﻿using CasinoApp; 
+using CasinoApp.Games; 
+using CasinoApp.Player; 
 using CasinoApp.Services;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,6 @@ namespace CasinoApp.Games.Blackjack
         private List<Card> _playerCards;
         private List<Card> _dealerCards;
 
-        // Лимит банка казино
         private const decimal MaxBankValue = 3000;
 
         public BlackjackGame(PlayerProfile player, decimal bet)
@@ -44,7 +43,6 @@ namespace CasinoApp.Games.Blackjack
         {
             Console.WriteLine("\n---=== Игра: Блэкджек ===---");
 
-            // Раздача начальных карт
             _playerCards = new List<Card> { DrawCard(), DrawCard() };
             _dealerCards = new List<Card> { DrawCard(), DrawCard() };
 
@@ -187,7 +185,7 @@ namespace CasinoApp.Games.Blackjack
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(message);
-            Console.WriteLine($"Ваш баланс: {_player.Balance:N2}"); // Ставка возвращается, баланс не меняется
+            Console.WriteLine($"Ваш баланс: {_player.Balance:N2}"); 
             Console.ResetColor();
         }
 

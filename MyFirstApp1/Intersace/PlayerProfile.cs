@@ -1,5 +1,4 @@
-﻿// CasinoApp/Player/PlayerProfile.cs
-namespace CasinoApp.Player
+﻿namespace CasinoApp.Player
 {
     public class PlayerProfile
     {
@@ -15,7 +14,7 @@ namespace CasinoApp.Player
             Balance = balance;
             Wins = 0;
             Losses = 0;
-            CurrentBet = 0; // Инициализируем нулем
+            CurrentBet = 0; 
         }
     }
 }
