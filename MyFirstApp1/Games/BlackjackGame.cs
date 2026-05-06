@@ -1,6 +1,6 @@
-﻿using CasinoApp; // Для структур Card, Suit, Rank
+﻿using CasinoApp; // Для доступа к константе MaxBankValue
 using CasinoApp.Games; // Базовый абстрактный класс
-using CasinoApp.Player; // Профиль игрока
+using CasinoApp.Player; // Для профиля игрока
 using CasinoApp.Services;
 using System;
 using System.Collections.Generic;
@@ -10,15 +10,15 @@ namespace CasinoApp.Games.Blackjack
 {
     public class BlackjackGame : CasinoGameBase
     {
-        // --- Поля класса ---
         private readonly Random _random = new Random();
         private PlayerProfile _player;
         private decimal _bet;
-        private Queue<Card> _deck; // Колода карт
-        private List<Card> _playerCards; // Карты игрока
-        private List<Card> _dealerCards; // Карты дилера
+        private List<Card> _playerCards;
+        private List<Card> _dealerCards;
 
-        // --- Конструктор с проверкой параметров ---
+        // Лимит банка казино
+        private const decimal MaxBankValue = 3000;
+
         public BlackjackGame(PlayerProfile player, decimal bet)
         {
             if (player == null)
@@ -31,42 +31,26 @@ namespace CasinoApp.Games.Blackjack
             _player = player;
             _bet = bet;
 
-            // Подписка на события для обновления профиля игрока
             this.OnWin += UpdateProfileOnWin;
             this.OnLoose += UpdateProfileOnLoose;
             this.OnDraw += UpdateProfileOnDraw;
 
-            // Запускаем игру после успешной инициализации
             PlayGame();
         }
 
-        // --- Реализация абстрактных методов из CasinoGameBase ---
+        protected override void FactoryMethod() { /* Логика подготовки */ }
 
-        /// <summary>
-        /// Фабричный метод. Здесь мы создаем и тасуем колоду.
-        /// </summary>
-        protected override void FactoryMethod()
-        {
-            CreateAndShuffleDeck();
-        }
-
-        /// <summary>
-        /// Главный метод игры. Содержит всю механику раунда.
-        /// </summary>
         public override void PlayGame()
         {
             Console.WriteLine("\n---=== Игра: Блэкджек ===---");
 
-            FactoryMethod(); // 1. Создаем колоду
-
-            // 2. Раздаем начальные карты
+            // Раздача начальных карт
             _playerCards = new List<Card> { DrawCard(), DrawCard() };
             _dealerCards = new List<Card> { DrawCard(), DrawCard() };
 
             Console.WriteLine($"Ваши карты: {string.Join(", ", _playerCards)}");
-            Console.WriteLine($"Карты дилера: {_dealerCards[0]}, *"); // Вторая карта дилера закрыта
+            Console.WriteLine($"Карты дилера: {_dealerCards[0]}, *");
 
-            // 3. Ход игрока
             bool isPlayerTurn = true;
             while (isPlayerTurn && CalculateScore(_playerCards) <= 21)
             {
@@ -81,6 +65,12 @@ namespace CasinoApp.Games.Blackjack
                     var card = DrawCard();
                     _playerCards.Add(card);
                     Console.WriteLine($"Вы взяли карту: {card}");
+
+                    if (CalculateScore(_playerCards) > 21)
+                    {
+                        OnLooseInvoke("Перебор! У вас более 21 очка.");
+                        isPlayerTurn = false;
+                    }
                 }
                 else if (choice == 2)
                 {
@@ -89,111 +79,24 @@ namespace CasinoApp.Games.Blackjack
                 }
             }
 
-            // 4. Проверка на перебор после хода игрока
             int playerSum = CalculateScore(_playerCards);
-            if (playerSum > 21)
+            if (playerSum <= 21)
             {
-                OnLooseInvoke("Перебор! У вас более 21 очка.");
-                return; // Завершаем игру, если игрок проиграл сразу
+                DealerTurn();
+                DetermineWinner();
             }
-
-            // 5. Ход дилера (открываем карты)
-            Console.WriteLine($"\nКарты дилера: {string.Join(", ", _dealerCards)}");
-            while (CalculateScore(_dealerCards) < 17)
-            {
-                var card = DrawCard();
-                _dealerCards.Add(card);
-                Console.WriteLine($"Дилер берет карту: {card}");
-            }
-
-            // 6. Определение победителя
-            int dealerSum = CalculateScore(_dealerCards);
-
-            Console.WriteLine($"\nВаши очки: {playerSum}. Очки дилера: {dealerSum}.");
-
-            if (dealerSum > 21 || playerSum > dealerSum)
-            {
-                OnWinInvoke("Вы победили! Поздравляем!");
-                _player.Balance += _bet * 2; // Выигрыш (возврат ставки + выигрыш)
-                _player.Wins++;
-            }
-            else if (playerSum == dealerSum)
-            {
-                OnDrawInvoke("Ничья! Ставка возвращается.");
-                // Баланс не меняется, ставка просто возвращается игроку
-                _player.Balance += _bet;
-            }
-            else
-            {
-                OnLooseInvoke("Вы проиграли.");
-                _player.Balance -= _bet;
-                _player.Losses++;
-            }
-
-            Console.WriteLine($"Ваш баланс после игры: {_player.Balance}");
         }
 
+        #region Приватные методы механики
 
-        // --- Приватные методы игровой механики ---
-
-        /// <summary>
-        /// Создает стандартную колоду из 36 карт и тасует ее.
-        /// </summary>
-        private void CreateAndShuffleDeck()
-        {
-            List<Card> cards = new List<Card>();
-
-            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
-            {
-                for (int rankValue = (int)Rank.Six; rankValue <= (int)Rank.Ace; rankValue++)
-                {
-                    cards.Add(new Card(suit, (Rank)rankValue));
-                }
-            }
-
-            _deck = new Queue<Card>(cards);
-            ShuffleDeck();
-        }
-
-        /// <summary>
-        /// Тасует текущую колоду.
-        /// </summary>
-        private void ShuffleDeck()
-        {
-            Card[] deckArray = _deck.ToArray();
-            int n = deckArray.Length;
-
-            while (n > 1)
-            {
-                n--;
-                int k = _random.Next(n + 1);
-                Card temp = deckArray[k];
-                deckArray[k] = deckArray[n];
-                deckArray[n] = temp;
-            }
-
-            _deck = new Queue<Card>(deckArray);
-        }
-
-        /// <summary>
-        /// Достает одну карту из колоды.
-        /// </summary>
-        /// <returns>Объект карты</returns>
         private Card DrawCard()
         {
-            if (_deck.Count == 0)
-            {
-                Console.WriteLine("\nКолода закончилась! Создаем и тасуем новую...");
-                CreateAndShuffleDeck();
-            }
-            return _deck.Dequeue();
+            return new Card(GetRandomSuit(), GetRandomRank());
         }
 
-        /// <summary>
-        /// Подсчитывает сумму очков карт на руке с учетом туза.
-        /// </summary>
-        /// <param name="cards">Список карт</param>
-        /// <returns>Сумма очков</returns>
+        private Suit GetRandomSuit() => (Suit)_random.Next(0, 4);
+        private Rank GetRandomRank() => (Rank)_random.Next(6, 15);
+
         private int CalculateScore(List<Card> cards)
         {
             int score = cards.Sum(c => c.CardRank == Rank.Ace ? 11 : (int)c.CardRank);
@@ -201,20 +104,72 @@ namespace CasinoApp.Games.Blackjack
 
             while (score > 21 && aceCount > 0)
             {
-                score -= 10; // Туз считается за 1 очко вместо 11
+                score -= 10;
                 aceCount--;
             }
-
             return score;
         }
 
+        private void DealerTurn()
+        {
+            Console.WriteLine($"\nКарты дилера: {string.Join(", ", _dealerCards)}");
+            while (CalculateScore(_dealerCards) < 17)
+            {
+                var card = DrawCard();
+                _dealerCards.Add(card);
+                Console.WriteLine($"Дилер взял карту: {card}");
+            }
+        }
 
-        // --- Обработчики событий ---
+        private void DetermineWinner()
+        {
+            int playerSum = CalculateScore(_playerCards);
+            int dealerSum = CalculateScore(_dealerCards);
+
+            Console.WriteLine($"\nИтог: У вас {playerSum}, у дилера {dealerSum}.");
+
+            if (dealerSum > 21 || playerSum > dealerSum)
+            {
+                OnWinInvoke("Вы победили! Поздравляем!");
+            }
+            else if (playerSum == dealerSum)
+            {
+                OnDrawInvoke("Ничья!");
+            }
+            else
+            {
+                OnLooseInvoke("Вы проиграли.");
+            }
+        }
+
+        #endregion
+
+        #region Обработчики событий и сохранение
 
         private void UpdateProfileOnWin(string message)
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(message);
+
+            decimal potentialNewBalance = _player.Balance + (_bet * 2);
+
+            if (potentialNewBalance > MaxBankValue)
+            {
+                decimal overflowAmount = potentialNewBalance - MaxBankValue;
+                _player.Balance = MaxBankValue;
+
+                Console.WriteLine($"\n🎉🎉🎉 ВНИМАНИЕ! 🎉🎉🎉");
+                Console.WriteLine($"Вы разорили казино! Ваш баланс ограничен: {MaxBankValue:N0}.");
+                Console.WriteLine($"Излишек {overflowAmount:N2} пойдет на постройку нового заведения.");
+                Console.WriteLine($"Ваш итоговый баланс: {_player.Balance:N0}");
+            }
+            else
+            {
+                _player.Balance += _bet * 2;
+                Console.WriteLine($"Ваш баланс: {_player.Balance:N2}");
+                _player.Wins++;
+            }
+
             Console.ResetColor();
         }
 
@@ -222,6 +177,9 @@ namespace CasinoApp.Games.Blackjack
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(message);
+            _player.Balance -= _bet;
+            Console.WriteLine($"Ваш баланс: {_player.Balance:N2}");
+            _player.Losses++;
             Console.ResetColor();
         }
 
@@ -229,7 +187,10 @@ namespace CasinoApp.Games.Blackjack
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(message);
+            Console.WriteLine($"Ваш баланс: {_player.Balance:N2}"); // Ставка возвращается, баланс не меняется
             Console.ResetColor();
         }
+
+        #endregion
     }
 }
